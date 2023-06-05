@@ -1,0 +1,281 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>收藏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-decoration: none;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            background-image: url("{% static 'css/imgs/4.webp' %}");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+        main{
+            position: relative;
+            /*margin: 10px ;*/
+            overflow: hidden;
+            padding: 0;
+            width: 100%;
+        }
+
+        /*main::after{
+      content: '';
+      display: block;
+      clear: both;
+    }*/
+        .fl {
+            float: left;
+        }
+
+        .fr {
+            float: right;
+        }
+
+        .nav {
+            margin-right: 150px;
+        }
+
+        .nav ul li {
+            display: inline-block;
+            list-style: none;
+            padding: 5px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            /*background-color: #F1F1F1;*/
+            color: black;
+            margin: 0 5px;
+        }
+
+        .nav ul li.account {
+            background-color: #3CB46E;
+        }
+
+        .nav ul li.account a {
+            color: white;
+        }
+
+        .nav ul li a {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .ct {
+            margin: 0 50px;
+            overflow: hidden;
+        }
+
+        /*.div{
+   	overflow: hidden;
+   }*/
+        main>div {
+            float: left;
+            padding: 5px;
+            /*border:1px solid #aaa;*/
+        }
+
+        main>div img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .description {
+            padding-top: 50px;
+            margin: 50px 100px;
+            align-content: center;
+            justify-content: center;
+        }
+
+        #load {
+            visibility: hidden;
+            height: 20px;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/float_windows.css' %}">
+</head>
+
+<script>
+    if(localStorage.getItem("token") == null){
+        alert("请先登录");
+        location.href = "/index";
+    }
+</script>
+
+<body>
+
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/index">首页</a></li>
+                        <li><a href="/upload">上传</a></li>
+                        <li><a href="/star">收藏</a></li>
+                        <li><a href="/set">设置</a></li>
+                        <li><a href="/login">登录/注册</a></li>
+                        <li><a href="#" onclick="log_out()">登出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="description">
+        <h1>我的收藏</h1>
+    </div>
+    <div class="ct">
+        <main id='main'>
+        </main>
+    </div>
+    <div id="load">you can't see me!</div>
+    <div class="description">
+        <h1>我的作品</h1>
+    </div>
+    <div class="ct">
+        <main id='main1'>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        function log_out(){
+            if(localStorage.getItem("token") == null){
+                alert("还未登录");
+                return;
+            }
+            axios.post("/api/User", {
+                action: "logout",
+            }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+            })
+            .then(function (response) {
+                console.log(response)
+                if(response.data.ret == 1){
+                    alert(response.data.msg)
+                }else{
+                    alert("登出成功")
+                    window.localStorage.removeItem("token");
+                    window.location.href = "/index";
+                }
+            })
+        }
+        var mainNode_star = document.querySelector('#main');
+        var mainNode_upload = document.querySelector('#main1');
+        //    var mainNodeWidth = parseFloat(getComputedStyle(mainNode).width)-40;
+        var baseHeight = 180;
+        var rowList_star = [], rowList_upload = [],
+            rowTotalWidth_star = 0, rowTotalWidth_upload = 0;
+        var curPage = 1;
+        start();
+
+        function start() {
+            curPage = 1;
+            mainNode_star.innerHTML = '';
+            mainNode_upload.innerHTML = '';
+            mainNodeWidth = parseFloat(getComputedStyle(mainNode_star).width) - 40;
+            rowList_star = [];
+            rowList_upload = [];
+            rowTotalWidth_star = 0;
+            rowTotalWidth_upload = 0;
+            axios.get("/api/Index?action=favor_list", {headers: {Authorization: ` ${localStorage.getItem("token")}`}}).then(render_star);
+            axios.get("/api/Index?action=upload_list", {headers: {Authorization: ` ${localStorage.getItem("token")}`}}).then(render_upload);
+        }
+
+        function render_star(response) {
+            if(response.data.ret == 1){
+                alert(response.data.msg);
+                return;
+            }
+            response.data.picList.forEach(function (imgInfo) {
+                imgInfo.newHeight = baseHeight;
+                imgInfo.newWidth = baseHeight * imgInfo.width / imgInfo.height;
+                imgInfo.src = "" + imgInfo.url;
+
+                if (imgInfo.newWidth + rowTotalWidth_star <= mainNodeWidth) {
+                    rowList_star.push(imgInfo);
+                    rowTotalWidth_star += imgInfo.newWidth;
+                } else {
+                    var rowHeight = (imgInfo.newHeight * mainNodeWidth) / rowTotalWidth_star;
+                    layout(rowList_star, rowHeight, "star");
+                    rowList_star = [imgInfo];
+                    rowTotalWidth_star = imgInfo.newWidth;
+                }
+            })
+            layout(rowList_star, baseHeight, "star");
+        }
+
+        function render_upload(response) {
+            response.data.picList.forEach(function (imgInfo) {
+                imgInfo.newHeight = baseHeight;
+                imgInfo.newWidth = baseHeight * imgInfo.width / imgInfo.height;
+                imgInfo.src = "" + imgInfo.url;
+
+                if (imgInfo.newWidth + rowTotalWidth_upload <= mainNodeWidth) {
+                    rowList_upload.push(imgInfo);
+                    rowTotalWidth_upload += imgInfo.newWidth;
+                } else {
+                    var rowHeight = (imgInfo.newHeight * mainNodeWidth) / rowTotalWidth_upload;
+                    layout(rowList_upload, rowHeight, "upload");
+                    rowList_upload = [imgInfo];
+                    rowTotalWidth_upload = imgInfo.newWidth;
+                }
+            })
+            layout(rowList_upload, baseHeight, "upload");
+        }
+
+
+        function img_onclick() {
+            window.open("/detail.html?pid=" + String(this.id));
+        }
+
+
+        function layout(list, rowHeight, choice) {
+            list.forEach(function (imgInfo) {
+                var divNode = document.createElement('div');
+                var imgNode = document.createElement('img');
+                
+                imgNode.src = imgInfo.src;
+                imgNode.id = imgInfo.pid;
+                imgNode.onclick = img_onclick;
+
+                divNode.appendChild(imgNode);
+                divNode.style.height = rowHeight + 'px';
+                divNode.style.width = imgInfo.newWidth * rowHeight / baseHeight + 'px';
+                if(choice === "star"){
+                    mainNode_star.appendChild(divNode);
+                }else{
+                    mainNode_upload.appendChild(divNode);
+                }
+
+            })
+        }
+        function isVisible($item) {
+            var scrollH = $(window).scrollTop(),
+                winH = $(window).height(),
+                top = $item.offset().top;
+
+            return top < winH + scrollH;
+        }
+
+    </script>
+</body>
+
+</html>

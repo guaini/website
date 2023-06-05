@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>用户设置</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/float_windows.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/set.css' %}">
+</head>
+<style>
+    body {
+    font-family: Arial;
+    background-color: #3498DB;
+    padding: 50px;
+    background-image: url("{% static 'css/imgs/5.jpg' %}");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+</style>
+<script>
+    if(localStorage.getItem("token") == null){
+        alert("请先登录");
+        location.href = "/index";
+    }
+</script>
+
+<body>
+
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/index">首页</a></li>
+                        <li><a href="/upload">上传</a></li>
+                        <li><a href="/star">收藏</a></li>
+                        <li><a href="/set">设置</a></li>
+                        <li><a href="/login">登录/注册</a></li>
+                        <li><a href="#" onclick="log_out()">登出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="login">
+        <div class="login-screen">
+            <div class="app-title">
+                <h1>个人信息修改</h1>
+            </div>
+            <div class="login-form" id="login-form">
+                <div class="control-group1">
+                    昵称： 
+                    <input type="text" v-model="name_msg" id="name" />
+                    邮箱： 
+                    <input type="text" v-model="email_msg" id="email" />
+                    
+                </div>
+                <div class="control-group2">
+                    微信： 
+                    <input type="text" v-model="QQ_msg" id="QQ" />
+                    国家： 
+                    <input type="text" v-model="country_msg" id="country" />
+                </div>
+                <div class="control-group3">
+                    性别： 
+                    <input type="radio" id="one" value="1" v-model="sex_msg">
+                    <label for="one">男</label>
+                    <input type="radio" id="two" value="2" v-model="sex_msg">
+                    <label for="two">女</label>
+                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+                    出生年份：
+                    <button @click="sub"> - </button>
+                    {% verbatim %}
+                    <span>{{ num }}</span>
+                    {% endverbatim %}
+                    <button @click="add"> + </button>
+                </div>
+                
+                <input type="submit" class="btn btn-primary btn-large btn-block" value="更新" id="uploadbtn" onclick="update()"/>
+                <Iframe id="myIframe" name="myIframe"></Iframe>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+        <script>
+
+            function log_out(){
+                if(localStorage.getItem("token") == null){
+                    alert("还未登录");
+                    return;
+                }
+                axios.post("/api/User", {
+                    action: "logout",
+                }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                })
+                .then(function (response) {
+                    console.log(response)
+                    if(response.data.ret == 1){
+                        alert(response.data.msg)
+                    }else{
+                        alert("登出成功")
+                        window.localStorage.removeItem("token");
+                        window.location.href = "/index";
+                    }
+                })
+            }
+
+
+            
+            var g1 = new Vue({
+                el:".control-group1",
+                data: {
+                    name_msg : "0",
+                    email_msg : "0",
+                    origin_name : "0"
+                },
+                beforeMount: function(){
+                    var that = this;
+                    axios.post("/api/User", {
+                        action: "getinfo",
+                        }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    }).then(
+                        function(response){
+                            that.name_msg = response.data.userinfo.username;
+                            that.email_msg = response.data.userinfo.email;
+                            that.origin_name = response.data.userinfo.username;
+                        }
+                    );
+                }
+            })
+
+            var g2 = new Vue({
+                el:".control-group2",
+                data:{
+                    country_msg: "0",
+                    QQ_msg: "0"
+                },
+                beforeMount: function(){
+                    var that = this;
+                    axios.post("/api/User", {
+                        action: "getinfo",
+                        }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    }).then(
+                        function(response){
+                            that.country_msg = response.data.userinfo.country;
+                            that.QQ_msg = response.data.userinfo.wechat;
+                        }
+                    );
+                }
+            })
+
+            var g3 = new Vue({
+                el:".control-group3",
+                data:{
+                    sex_msg: "1",
+                    num: 2000
+                },
+                methods: {
+                    // 减
+                    sub: function () {
+                        // console.log("sub");
+                        // 递减
+                        if (this.num > 1900) {
+                            this.num--;
+                        } else {
+                            alert("别点啦,太小啦!");
+                        }
+                    },
+                    // 加
+                    add: function () {
+                        // console.log("add");
+                        // 累加
+                        if (this.num < 2050) {
+                            this.num++;
+                        } else {
+                            alert("别点啦,太大啦!");
+                        }
+                    }
+                },
+                beforeMount: function(){
+                    var that = this;
+                    axios.post("/api/User", {
+                        action: "getinfo",
+                        }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    }).then(
+                        function(response){
+                            that.sex_msg = response.data.userinfo.sex;
+                            that.num = parseInt(response.data.userinfo.birthday);
+                        }
+                    );
+                }
+            })
+
+            // 查询一下，统一赋值
+
+            function update(){
+                if(g1.name_msg === g1.origin_name){
+                    axios.post("/api/User", {
+                        action: "update",
+                        newinfo:
+                        {
+                        email: g1.email_msg,
+                        sex: g3.sex_msg,
+                        wechat: g2.QQ_msg,
+                        country: g2.country_msg,
+                        birthday: g3.num,}
+                        }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    })
+                    .then(function (response) {
+                        console.log(response)
+                        alert(response.data.msg)
+    
+                        if(response.data.ret == 0){
+                            window.localStorage.setItem("token", response.data.token);
+                            window.location.href = "/update";
+                        }
+                    }) 
+                }else{
+                    axios.post("/api/User", {
+                        action: "update",
+                        newinfo:
+                        {
+                        nickname: g1.name_msg,
+                        email: g1.email_msg,
+                        sex: g3.sex_msg,
+                        wechat: g2.QQ_msg,
+                        country: g2.country_msg,
+                        birthday: g3.num,}
+                        }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    })
+                    .then(function (response) {
+                        console.log(response)
+                        alert(response.data.msg)
+    
+                        if(response.data.ret == 0){
+                            window.localStorage.setItem("token", response.data.token);
+                            window.location.href = "/update";
+                        }
+                    }) 
+                }
+            }
+            
+        </script>
+    </div>
+</body>
+
+</html>

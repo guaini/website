@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">	
+	<title>登录|注册</title>
+	<!-- 图标库npmjs.com -->
+	<link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/float_windows.css' %}">
+
+</head>
+<style>
+    main {
+    background-image: url("{% static 'css/imgs/3.jpg' %}");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+</style>
+<body>
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/index">首页</a></li>
+                        <li><a href="/upload">上传</a></li>
+                        <li><a href="/star">收藏</a></li>
+                        <li><a href="/set">设置</a></li>
+                        <li><a href="/login">登录/注册</a></li>
+                        <li><a href="#" onclick="log_out()">登出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用到字体图标，从fontAwesome里icon中找 -->
+	<header>
+		<a class="login" href="#"><i class="fa fa-user-circle"></i></a>
+	</header>
+
+	<main>
+        <div class="flip-modal login">
+            <!-- 展示登录页面 -->
+            <div class="modal modal-login">
+                <a class="close" href="#"><i class="fa fa-close"></i></a>
+                <!-- 登录 -->
+                <div class="tabs">
+                    <a class="login active" href="#">登录</a>
+                    <a class="register" href="#">注册</a>
+                </div>
+                <div class="content">
+                    <div class="errormsg"></div>
+                    <form action="/login" method="post">
+                        <div class="input-field">
+                            <i class="fa fa-user-o"></i>
+                            <input name="username" type="text" placeholder="用户名">
+                        </div>
+                        <div class="input-field">
+                            <i class="fa fa-lock"></i>
+                            <input name="password" type="password" placeholder="密码">
+                        </div>
+                        <div class="input-field">
+                            <input type="submit" value="登录">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 展示注册页面 -->
+            <div class="modal modal-register">
+                <a class="close fa fa-close" href="#"></a>
+                <div class="tabs">
+                    <a class="login" href="#">登录</a>
+                    <a class="register active" href="#">注册</a>
+                </div>
+                <div class="content">
+                    <div class="errormsg"></div>
+                    <form action="/register" method="post">
+                        <div class="input-field">
+                            <i class="fa fa-user-o"></i>
+                            <input name="username" type="text" placeholder="输入用户名">
+                        </div>
+                        <div class="input-field">
+                            <i class="fa fa-lock"></i>
+                            <input name="password" type="password" placeholder="输入密码">
+                        </div>
+                        <div class="input-field">
+                            <i class="fa fa-lock"></i>
+                            <input name="password2"  type="password" placeholder="再次输入密码">
+                        </div>
+                        <div class="input-field">
+                            <input type="submit" value="注册">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+	</main>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script>
+        function log_out(){
+            if(localStorage.getItem("token") == null){
+                alert("还未登录");
+                return;
+            }
+            axios.post("/api/User", {
+                action: "logout",
+            }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+            })
+            .then(function (response) {
+                console.log(response)
+                if(response.data.ret == 1){
+                    alert(response.data.msg);
+                    window.localStorage.removeItem("token");
+                }else{
+                    alert("登出成功")
+                    window.localStorage.removeItem("token");
+                    window.location.href = "/index";
+                }
+            })
+        }
+
+        function $(selector){
+            return document.querySelector(selector)
+        }
+        function $$(selector){
+            return document.querySelectorAll(selector)
+        }
+        $$('.modal .login').forEach(function(node){
+            node.onclick = function(){
+                $('.flip-modal').classList.remove('register')
+                $('.flip-modal').classList.add('login')
+            }      
+        })
+        $$('.modal .register').forEach(function(node){
+            node.onclick = function(){
+                $('.flip-modal').classList.remove('login')
+                $('.flip-modal').classList.add('register')
+            }      
+        })
+        $(".close").onclick = function(){
+            $('.flip-modal').classList.remove('show')
+        }
+        $(".flip-modal").onclick=function(e){
+            e.stopPropagation()
+        }
+
+        $('header .login').onclick = function(e){
+            e.stopPropagation()
+            $('.flip-modal').classList.add('show')
+        }
+        
+        $('.modal-login form').addEventListener('submit', function(e){
+            e.preventDefault()
+            var username = $('.modal-login input[name=username]').value;
+            var password = $('.modal-login input[name=password]').value;
+            if(localStorage.getItem("token") != null){
+                alert("已经登录了");
+                window.location.href = "/index";
+                return;
+            }
+            if(!/^\w{3,8}$/.test(username)){
+                $('.modal-login .errormsg').innerText = '用户名需输入3-8个字符，包括字母数字下划线'
+                return false
+            }
+            if(!/^\w{6,10}$/.test(password)){
+                $('.modal-login .errormsg').innerText = '密码需输入6-10个字符，包括字母数字下划线'
+                return false
+            }
+
+            axios.post("/api/User", {
+                action: "login",
+                username: username, 
+                password: password
+            })
+            .then(function (response) {
+                console.log(response)
+                alert(response.data.msg)
+                if(response.data.ret == 0){
+                    window.localStorage.setItem("token", response.data.token);
+                    window.location.href = "/index";
+                }else if(localStorage.getItem("token") != null){
+                    window.localStorage.removeItem("token");
+                }
+            }) 
+
+        })
+
+        $('.modal-register form').addEventListener('submit', function(e){
+            e.preventDefault()
+            if(!/^\w{3,8}$/.test($('.modal-register input[name=username]').value)){
+                $('.modal-register .errormsg').innerText = '用户名需输入3-8个字符，包括字母数字下划线'
+                return false
+            }
+            if(/^hunger$|^ruoyu$/.test($('.modal-register input[name=username]').value)){
+                $('.modal-register .errormsg').innerText = '用户名已存在'
+                return false
+            }
+            if(!/^\w{6,10}$/.test($('.modal-register input[name=password]').value)){
+                $('.modal-register .errormsg').innerText = '密码需输入6-10个字符，包括字母数字下划线'
+                return false
+            }
+            if($('.modal-register input[name=password]').value !== $('.modal-register input[name=password2]').value){
+                $('.modal-register .errormsg').innerText = '两次输入的密码不一致'
+                return false
+            }
+            var username = $('.modal-register input[name=username]').value;
+            var password = $('.modal-register input[name=password]').value;
+            axios.post("/api/User", {
+                action: "register",
+                data: {
+                    username: username, 
+                    passwd: password
+                }
+            })
+            .then(function (response) {
+                console.log(response)
+                if(response.data.ret == 0){
+                    alert("注册成功");
+                    window.location.href = "/login";
+                }else{
+                    alert(response.data.msg);
+                }
+            })
+        })
+
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/detail.css' %}">
+    <title>detail</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <div id="mask">
+        <div class="center">
+            <h2 class="title"> {{title}} </h2>
+            <!-- 图片 -->
+            <img :src="imgSrc" :style="img_style" alt="" />
+            
+            <div class="meaasge">
+                <div class="detail">
+                    <div>作者: {{author}}</div>
+                    <div>日期: {{date}}</div> 
+                    <div id="tag">tag: {{tags}}</div>
+                </div>
+                <div class="like">
+                    <button id="delete" v-show="isShow"><img src="{% static 'css/imgs/delete.webp' %}" alt="" @click="delete_pic"></button>
+                    <button id="thumb"><img src="{% static 'css/imgs/thumb.webp' %}" alt="" @click="give_a_thumb"></button>
+                    {{num_like}}
+                    <button id="star"><img src="{% static 'css/imgs/star.webp' %}" alt="" @click="star_it"></button>
+                    {{num_star}}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <script>
+        var url = "/api/Index?action=pic_info&" + decodeURI(location.search).substr(1);
+        var check = "/api/Index?action=check_upload&" + decodeURI(location.search).substr(1);
+        var app = new Vue({
+            el: "#mask",
+            data: {
+                title: "",
+                imgSrc: "",
+                author: "",
+                date: "",
+                width: 0,
+                height: 0,
+                pid: 0,
+                num_like: 0,
+                num_star: 0,
+                tags: "",
+                isShow: false,
+                img_style: {
+                    width: "",
+                    height: ""
+                }
+            },
+            beforeMount: function(){
+                var that = this;
+                axios.get(url).then(
+                    function(response){
+                        that.date = response.data.info.upload_time;
+                        that.author = response.data.info.uploader;
+                        that.imgSrc = "" + response.data.info.url;
+                        that.title = response.data.info.name;
+                        that.width = Number(response.data.info.width);
+                        that.height = Number(response.data.info.height);
+                        that.pid = response.data.info.pid;
+                        that.num_like = response.data.info.num_like;
+                        that.num_star = response.data.info.num_star;
+                        that.tags = response.data.tags;
+                        that.isShow = false;
+
+                        if(that.height * 2 > that.width){
+                            that.img_style["height"] = "500px";
+                            that.img_style["width"] = String(that.width * 500.0 / that.height) + "px";
+                        }else{
+                            that.img_style["width"] = "1000px";
+                            that.img_style["height"] = String(that.height * 1000.0 / that.width) + "px";
+                        }
+                    }
+                );
+
+                axios.get(check, {headers: {Authorization: ` ${localStorage.getItem("token")}`}}).then(function (response) {
+                    if(parseInt(response.data.ret) == 0){
+                        that.isShow = true;
+                    }
+                })
+            },
+            methods: {
+                delete_pic: function() {
+                    var that = this;
+                    axios.post("/api/Picture", {
+                        action: "delete",
+                        pid: that.pid
+                    }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    })
+                    .then(function (response) {
+                        alert(response.data.msg)
+                        window.location.href = "/index";
+                    })
+                },
+
+                give_a_thumb: function() {
+                    var that = this;
+                    axios.post("/api/Picture", {
+                        action: "like",
+                        pid: that.pid
+                    }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    })
+                    .then(function (response) {
+                        if(response.data.ret == 1){
+                            alert(response.data.msg)
+                        }else{
+                            that.num_like = response.data.num_like;
+                            alert("已点赞")
+                        }
+                    })
+                },
+
+                star_it: function() {
+                    var that = this;
+                    axios.post("/api/Picture", {
+                        action: "favor",
+                        pid: that.pid
+                    }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                    })
+                    .then(function (response) {
+                        if(response.data.ret == 1){
+                            alert(response.data.msg)
+                        }else{
+                            that.num_star = response.data.num_star;
+                            alert(response.data.msg)
+                        }
+                    })
+                }
+            },
+        })
+    </script>
+</body>
+</html>

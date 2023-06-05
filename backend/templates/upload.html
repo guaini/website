@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>上传页面</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/float_windows.css' %}">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        *:focus {
+            outline: none;
+        }
+
+        body {
+            font-family: Arial;
+            background-color: #3498DB;
+            padding: 50px;
+            background-image: url("{% static 'css/imgs/5.webp' %}");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        .login {
+            margin: 20px auto;
+            width: 90%;
+        }
+
+        .login-screen {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px 60px 60px;
+            border-radius: 20px
+        }
+
+        .app-title {
+            /* text-align: center; */
+            color: #777;
+        }
+
+        .app-title h1 {
+            font-size: 50px;
+            color:#ffffff;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        input {
+            /* text-align: center; */
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: 2px solid transparent;
+            border-radius: 3px;
+            font-size: 16px;
+            font-weight: 200;
+            padding: 10px 0;
+            width: 80%;
+            transition: border .5s;
+        }
+
+        input:focus {
+            border: 2px solid #3498DB;
+            box-shadow: none;
+        }
+
+        .btn {
+            border: 2px solid transparent;
+            background: black;
+            color: #ffffff;
+            font-size: 16px;
+            line-height: 25px;
+            padding: 10px 0;
+            text-decoration: none;
+            text-shadow: none;
+            border-radius: 3px;
+            box-shadow: none;
+            transition: 0.25s;
+            display: block;
+            width: 250px;
+            margin: 100px 0;
+        }
+
+        .btn:hover {
+            background-color: #2980B9;
+        }
+
+        .login-link {
+            font-size: 12px;
+            color: rgb(163, 159, 159);
+            display: block;
+            margin-top: 12px;
+            text-decoration: none;
+        }
+
+        .login-link:hover {
+            color: rgb(0, 0, 0);
+            transition: .5s;
+        }
+
+        #img-file {
+            background: rgba(0, 0, 0, 0.4);
+            color: #777;
+        }
+
+        #myIframe {
+            display: none;
+        }
+    </style>
+</head>
+
+<script>
+    if(localStorage.getItem("token") == null){
+        alert("请先登录");
+        location.href = "/index";
+    }
+</script>
+
+<body>
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/index">首页</a></li>
+                        <li><a href="/upload">上传</a></li>
+                        <li><a href="/star">收藏</a></li>
+                        <li><a href="/set">设置</a></li>
+                        <li><a href="/login">登录/注册</a></li>
+                        <li><a href="#" onclick="log_out()">登出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login">
+        <div class="login-screen">
+            <div class="app-title">
+                <h1>图片上传</h1>
+            </div>
+            <div class="control-group">
+                <input type="text" class="login-field" value="" placeholder="图片名字" id="name" />
+            </div>
+            <div class="control-group">
+                <input type="text" class="login-field" value="" placeholder="标签1" id="tag1" />
+            </div>
+            <div class="control-group">
+                <input type="text" class="login-field" value="" placeholder="标签2" id="tag2" />
+            </div>
+            <div class="control-group">
+                <input type="text" class="login-field" value="" placeholder="标签3" id="tag3" />
+            </div>
+            <div class="control-group">
+                <input type="text" class="login-field" value="" placeholder="标签4" id="tag4" />
+            </div>
+            <div class="login-form">
+                <input id="img-file" name="file" style="background: rgba(255, 255, 255, 0.4); color:rgb(0, 0, 0)" type="file" accept="image/png, image/gif, image/jpeg" />
+                <input type="submit" class="btn btn-primary btn-large btn-block" value="上传" id="uploadbtn" />
+            </div>
+        </div>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+            function cansub() {
+                return false;
+            }
+        </script>
+        <script>
+            function log_out(){
+                if(localStorage.getItem("token") == null){
+                    alert("还未登录");
+                    return;
+                }
+                axios.post("/api/User", {
+                    action: "logout",
+                }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                })
+                .then(function (response) {
+                    console.log(response)
+                    if(response.data.ret == 1){
+                        alert(response.data.msg)
+                    }else{
+                        alert("登出成功")
+                        window.localStorage.removeItem("token");
+                        window.location.href = "/index";
+                    }
+                })
+            }
+            uploadbtn.onclick = function () {
+                if(document.getElementById("name").value === ""){
+                    alert("请输入图片名字");
+                    return;
+                }
+
+                var inputfile = document.getElementById('img-file').files[0];
+                if(typeof inputfile === "undefined"){
+                    alert("请选择图片");
+                }
+                
+                var list = [];
+                if(document.getElementById("tag1").value != ""){
+                    list.push(document.getElementById("tag1").value);
+                }
+                if(document.getElementById("tag2").value != ""){
+                    list.push(document.getElementById("tag2").value);
+                }
+                if(document.getElementById("tag3").value != ""){
+                    list.push(document.getElementById("tag3").value);
+                }
+                if(document.getElementById("tag4").value != ""){
+                    list.push(document.getElementById("tag4").value);
+                }
+
+                var data = {
+                    name: document.getElementById("name").value,
+                    size: inputfile.size,
+                    tags: list
+                }
+
+                var fromdata = new FormData();
+                fromdata.append('file', inputfile, inputfile.name);
+                fromdata.append("data", JSON.stringify(data));
+                fromdata.append("action", "upload");
+                axios.post("/api/Picture/upload", fromdata, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+                }).then(function (response) {
+                    console.log(response)
+                    alert(response.data.msg)
+                    document.getElementById("tag1").value = "";
+                    document.getElementById("tag2").value = "";
+                    document.getElementById("tag3").value = "";
+                    document.getElementById("tag4").value = "";
+                    document.getElementById("name").value = "";
+                    document.getElementById('img-file').value = "";
+                })
+                
+            };
+        </script>
+    </div>
+</body>
+
+</html>

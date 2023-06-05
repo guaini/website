@@ -1,0 +1,371 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>我的画廊</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/float_windows.css' %}">
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-decoration: none;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            background-image: url("{% static 'css/imgs/6.jpg' %}");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            overflow: hidden;
+            padding: 0;
+            width: 100%;
+        }
+
+        .fl {
+            float: left;
+        }
+
+        .fr {
+            float: right;
+        }
+
+        header {
+            overflow: hidden;
+            padding: 10px;
+            position: fixed;
+            top: 0;
+            background: white linear-gradient(to bottom right, white, #67d335);
+            z-index: 2;
+            width: 100%;
+        }
+
+        .nav {
+            margin-right: 150px;
+        }
+
+        .nav ul li {
+            display: inline-block;
+            list-style: none;
+            padding: 5px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            /*background-color: #F1F1F1;*/
+            color: black;
+            margin: 0 5px;
+        }
+
+        .nav ul li a {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .ct {
+            margin: 0 50px;
+            overflow: hidden;
+        }
+
+        /*.div{
+   	overflow: hidden;
+   }*/
+        main>div {
+            float: left;
+            padding: 5px;
+            /*border:1px solid #aaa;*/
+        }
+
+        main>div img {
+            width: 100%;
+            height: 100%;
+        }
+
+        main{
+            margin: 20px 45px;
+        }
+
+        .search {
+            margin-left: 100px;
+        }
+
+        .search input {
+            padding: 5px;
+            border-radius: 10px;
+            background: #f1f1f1;
+            width: 350px;
+            outline: none;
+        }
+
+        #search {
+            border-radius: 20px;
+            color: #808080;
+            border: 1px outset grey;
+            width: 50px;
+            font-size: x-small;
+            height: 26px;
+        }
+
+        #search:active {
+            background-color: #3CB46E;
+        }
+
+        #search:active {
+            /*border:1px inset grey;*/
+        }
+
+        .description {
+            padding-top: 50px;
+            margin: 20px 100px;
+            background: rgba(250, 248, 248, 0.6);
+        }
+
+        .description p {
+            margin: 5px 10%;
+            font-weight: 550;
+            font-size: small;
+        }
+
+        #load {
+            visibility: hidden;
+            height: 20px;
+        }
+
+
+        .tab_list {
+            background: rgba(255, 255, 255, 0.4);
+            margin: 20px 100px;
+        }
+        .tab_list li{
+            display: inline-block;
+            font-size: x-small;
+            font-weight: 600;
+            padding: 1em;
+        }
+        .tab_list li:hover{
+            background-color: orange;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/index">首页</a></li>
+                        <li><a href="/upload">上传</a></li>
+                        <li><a href="/star">收藏</a></li>
+                        <li><a href="/set">设置</a></li>
+                        <li><a href="/login">登录/注册</a></li>
+                        <li><a href="#" onclick="log_out()">登出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <header>
+        <div class="search fl">
+            <input type="search" placeholder="搜索: pid, pname, tag, uploader">
+            <button id="search">搜索</button>
+        </div>
+        <div class="nav fr">
+            <ul>
+                <li><a href="/login">登录/注册</a></li>
+                <li><a href="/upload">上传</a></li>
+                <li><a href="/star">收藏</a></li>
+                <li><a href="/set">设置</a></li>
+            </ul>
+        </div>
+    </header>
+    <div class="description">
+        <h1>欢迎来到我的画廊</h1>
+        <p>这是一个数据库期末作业，前端使用 Vue + Axios，后端使用 Django + Opengauss</p>
+        <p>该网站主要实现了登录注册、上传图片、更改个人设置、按照条件搜索图片、点赞收藏等功能</p>
+        <p>贡献者： 前端：Maple 后端：怪尼，Semi</p>
+    </div>
+
+    <div class="tab_list">
+        <ul>
+            <li id='date'>按时间排序</li>
+            <li id='star'>按收藏数排序</li>
+            <li id='like'>按点赞排序</li>
+            <li id='pname'>按名称排序</li>
+            <li id='pid'>按id排序</li>
+        </ul>
+    </div>
+
+    <div class="ct">
+        <main id='main'>
+        </main>
+    </div>
+    <div id="load">you can't see me!</div>
+        
+
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        function log_out(){
+            if(localStorage.getItem("token") == null){
+                alert("还未登录");
+                return;
+            }
+            axios.post("/api/User", {
+                action: "logout",
+            }, {headers: {Authorization: ` ${localStorage.getItem("token")}`},
+            })
+            .then(function (response) {
+                console.log(response)
+                if(response.data.ret == 1){
+                    alert(response.data.msg)
+                }else{
+                    alert("登出成功")
+                    window.localStorage.removeItem("token");
+                    window.location.href = "/index";
+                }
+            })
+        }
+        
+        var mainNode = document.querySelector('#main');
+        //    var mainNodeWidth = parseFloat(getComputedStyle(mainNode).width)-40;
+        var baseHeight = 180;
+        var input = document.querySelector('header input');
+
+        var search = document.querySelector('#search');
+        var date = document.querySelector('#date');
+        var star = document.querySelector('#star');
+        var pname = document.querySelector('#pname');
+        var pid = document.querySelector('#pid');
+        var like = document.querySelector('#like');
+
+        var rowList = [], rowTotalWidth = 0;
+        var remember = '';
+        var curPage = 1;
+        var isDataArrive = true;
+        start('');
+
+        function start(choice) {
+            curPage = 1;
+            mainNode.innerHTML = '';
+            mainNodeWidth = parseFloat(getComputedStyle(mainNode).width) - 40;
+            rowList = [];
+            rowTotalWidth = 0;
+            if(choice === 'date'){
+                axios.get("/api/Index?action=date").then(render);
+            }else if(choice === 'pid'){
+                axios.get("/api/Index?action=pid").then(render);
+            }else if(choice === 'star'){
+                axios.get("/api/Index?action=star").then(render);
+            }else if(choice === 'like'){
+                axios.get("/api/Index?action=like").then(render);
+            }else if(choice === 'pname'){
+                axios.get("/api/Index?action=name").then(render);
+            }else if(choice === ''){
+                getData().then(render)
+            }else{
+                axios.get("/search?key=" + choice).then(render);
+            }
+        }
+
+        search.onclick = function () {
+            start(input.value);
+        }
+
+        date.onclick = function () {
+            start('date');
+        }
+
+        pid.onclick = function () {
+            start('pid');
+        }
+
+        star.onclick = function () {
+            start('star');
+        }
+
+        like.onclick = function() {
+            start('like');
+        }
+
+        pname.onclick = function () {
+            start('pname');
+        }
+
+        function img_onclick() {
+            window.open("/detail?pid=" + String(this.id));
+        }
+
+        function getData() {
+            var data = {
+                action: "list",
+            }
+            var url = "/api/Picture";
+            return axios.post(url, data);
+        }
+
+        function render(response) {
+            if(response.data.ret == 1){
+                return;
+            }
+            isDataArrive = false;
+            response.data.picList.forEach(function (imgInfo) {
+                imgInfo.newHeight = baseHeight;
+                imgInfo.newWidth = baseHeight * imgInfo.width / imgInfo.height;
+                imgInfo.src = "" + imgInfo.url;
+
+                if (imgInfo.newWidth + rowTotalWidth <= mainNodeWidth) {
+                    rowList.push(imgInfo);
+                    rowTotalWidth += imgInfo.newWidth;
+                } else {
+                    var rowHeight = (imgInfo.newHeight * mainNodeWidth) / rowTotalWidth;
+                    layout(rowList, rowHeight);
+                    rowList = [imgInfo];
+                    rowTotalWidth = imgInfo.newWidth;
+                }
+            })
+            layout(rowList, baseHeight);
+            isDataArrive = true;
+        }
+
+
+        function layout(list, rowHeight) {
+            list.forEach(function (imgInfo) {
+                var divNode = document.createElement('div');
+                var imgNode = document.createElement('img');
+                
+                imgNode.src = imgInfo.src;
+                imgNode.id = imgInfo.pid;
+                imgNode.onclick = img_onclick;
+
+                divNode.appendChild(imgNode);
+                divNode.style.height = rowHeight + 'px';
+                divNode.style.width = imgInfo.newWidth * rowHeight / baseHeight + 'px';
+                mainNode.appendChild(divNode);
+                console.log(mainNodeWidth)
+
+            })
+        }
+        function isVisible($item) {
+            const scrollH = $(window).scrollTop(),
+                winH = $(window).height(),
+                top = $item.offset().top;
+
+            return top < winH + scrollH;
+        }
+
+    </script>
+</body>
+
+</html>
