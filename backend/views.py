@@ -144,3 +144,103 @@ def get_name_from_token(request):
     decoded = jwt.decode(token, 'login', algorithms=['HS256'])
     username = decoded['username']
     return username
+
+
+def delpic(request):
+    pid = request.content_params['pid']
+    record = Picture.objects.get(pid=pid)
+    record.delete()
+    return JsonResponse({'ret': 0, 'msg': '删除成功'})
+
+
+def listPic(request):
+    pic = Picture.objects.filter()
+    piclist = [{'pid': i.pid,
+                'uploader': i.uploader.username,
+                'upload_time': i.upload_time.date(),
+                'num_like': i.num_like,
+                'num_star': i.num_star,
+                'num_view': i.num_view,
+                'url': i.img.url,
+                'width': i.img.width,
+                'height': i.img.height, } for i in pic]
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def favor(request):
+    nickname = get_name_from_token(request)
+    pid = request.content_params['pid']
+    user = User.objects.get(username=nickname)
+    pic = Picture.objects.get(pid=pid)
+    try:
+        favor_pic = Favorite.objects.get(user=user, pid=pic)
+    except Favorite.DoesNotExist:
+        result = Favorite.objects.create(user=user, pid=pic)
+        pic.num_star += 1
+        pic.save()
+        return JsonResponse({'ret': 0, 'msg': '收藏成功', 'pic': pic.pid, 'num_star': pic.num_star})
+
+    favor_pic.delete()
+    pic.num_star -= 1
+    pic.save()
+    return JsonResponse({'ret': 0, 'msg': '取消收藏', 'pic': pic.pid, 'num_star': pic.num_star})
+
+
+# def nofavor(request):
+#     nickname = get_name_from_token(request)
+#     pic = request.content_params['pic']
+#     record = Favorite.objects.get(user=nickname, pid=pic)
+#     record.delete()
+#     img = Picture.objects.get(pid=pic)
+#     img.num_star -= 1
+#     img.save()
+#     return JsonResponse({'ret': 0, 'msg': '删除成功'})
+
+
+def like(request):
+    pid = request.content_params['pid']
+    record = Picture.objects.get(pid=pid)
+    record.num_like += 1
+    record.save()
+    return JsonResponse({'ret': 0, 'msg': '点赞成功', 'num_like': record.num_like})
+
+
+# def addview(request):
+#     pid = request.params['pid']
+#     record = Picture.objects.get(pid=pid)
+#     record.num_view += 1
+#     record.save()
+#     return JsonResponse({'ret': 0, 'msg': '浏览数增加', 'num_view': record.num_view})
+
+
+def buildlist(pic):
+    plist = [{'pid': i.pid,
+              'uploader': i.uploader.username,
+              'upload_time': i.upload_time.date(),
+              'num_like': i.num_like,
+              'num_star': i.num_star,
+              'num_view': i.num_view,
+              'url': i.img.url,
+              'width': i.img.width,
+              'height': i.img.height, } for i in pic]
+    return plist
+
+
+def picinfo(request):
+    pid = request.content_params['pid']
+    picture = Picture.objects.get(pid=pid)
+    info = {'pid': picture.pid,
+            'name': picture.imgname,
+            'uploader': picture.uploader.username,
+            'upload_time': picture.upload_time.date(),
+            'num_like': picture.num_like,
+            'num_star': picture.num_star,
+            'num_view': picture.num_view,
+            'url': picture.img.url,
+            'width': picture.img.width,
+            'height': picture.img.height, }
+    tags = PictoTag.objects.filter(pid=picture.pid)
+    s = ""
+    for t in tags:
+        s += t.tag_id.tname + ", "
+    return JsonResponse({'ret': 0, 'info': info, 'tags': s})
