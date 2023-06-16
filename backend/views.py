@@ -146,6 +146,35 @@ def get_name_from_token(request):
     return username
 
 
+def upload(request: HttpRequest):
+    data = request.POST.dict()['data']
+    data = json.loads(data)
+    size = data['size']
+    tags = data['tags']
+    name = data['name']
+    picture = request.FILES.get('file')
+    print(data, picture)
+    token = request.META.get('HTTP_AUTHORIZATION')
+    decoded = jwt.decode(token, 'login', algorithms=['HS256'])
+    username = decoded['username']
+    uploader = User.objects.get(username=username)
+    result = Picture.objects.create(img=picture,
+                                    imgname=name,
+                                    size=size,
+                                    uploader=uploader,
+                                    num_like=0,
+                                    num_star=0,
+                                    num_view=0)
+    for tag_name in tags:
+        try:
+            tag = Tag.objects.get(tname=tag_name)
+        except Tag.DoesNotExist:
+            tag = Tag.objects.create(tname=tag_name)
+        PictoTag.objects.create(pid=result, tag_id=tag)
+    print(result.img)
+    return JsonResponse({'ret': 0, 'msg': '上传成功', 'url': result.img.url, 'id': result.pid})
+
+
 def delpic(request):
     pid = request.content_params['pid']
     record = Picture.objects.get(pid=pid)
