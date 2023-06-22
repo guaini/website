@@ -273,3 +273,95 @@ def picinfo(request):
     for t in tags:
         s += t.tag_id.tname + ", "
     return JsonResponse({'ret': 0, 'info': info, 'tags': s})
+
+
+def nameListpic(request):
+    pic = Picture.objects.order_by('imgname')
+    piclist = buildlist(pic)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def dateListpic(request):
+    pic = Picture.objects.order_by('upload_time')
+    piclist = buildlist(pic)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def idListpic(request):
+    piclist = Picture.objects.order_by('pid')
+    piclist = buildlist(piclist)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def likeListpic(request):
+    piclist = Picture.objects.order_by('-num_like')
+    piclist = buildlist(piclist)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def starListpic(request):
+    piclist = Picture.objects.order_by('-num_star')
+    piclist = buildlist(piclist)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def check_user_upload(request):
+    username = get_name_from_token(request)
+    pid = request.content_params['pid']
+    pic = Picture.objects.get(pid=pid)
+    if pic.uploader.username == username:
+        return JsonResponse({'ret': 0})
+    return JsonResponse({'ret': 1})
+
+
+def user_upload(request):
+    username = get_name_from_token(request)
+    user = User.objects.get(username=username)
+    pic = Picture.objects.filter(uploader=user.id)
+    piclist = buildlist(pic)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def user_favor(request):
+    username = get_name_from_token(request)
+    user = User.objects.get(username=username)
+    pic = Favorite.objects.filter(user=user.id)
+    piclist = []
+    for item in pic:
+        i = item.pid
+        dic = {'pid': i.pid,
+               'uploader': i.uploader.username,
+               'upload_time': i.upload_time.date(),
+               'num_like': i.num_like,
+               'num_star': i.num_star,
+               'num_view': i.num_view,
+               'url': i.img.url,
+               'width': i.img.width,
+               'height': i.img.height, }
+        piclist.append(dic)
+    return JsonResponse({'ret': 0, 'picList': piclist})
+
+
+def tagTopic(request):
+    tag = request.content_params['tag']
+    try:
+        tag_id = Tag.objects.get(tname=tag)
+    except Tag.DoesNotExist:
+        return JsonResponse({'ret': 1, 'msg': '标签不存在'})
+
+    pidlist = PictoTag.objects.filter(tag_id=tag_id)
+    piclist = Picture.objects.filter(pid=pidlist.pid)
+    piclist = buildlist(piclist)
+    return JsonResponse({'ret': 0, 'msg': '为您找到匹配该标签的图片', 'picList': piclist})
+
+
+def userTopic(request):
+    username = request.content_params['user']
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({'ret': 1, 'msg': '用户不存在'})
+
+    piclist = Picture.objects.filter(uploader=user.uid)
+    piclist = buildlist(piclist)
+    return JsonResponse({'ret': 0, 'msg': '为您找到该用户上传的图片', 'picList': piclist})
