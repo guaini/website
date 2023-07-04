@@ -71,7 +71,8 @@
 
 【网页6】
 
-截图： ![网页6](arch.assets/网页6.png)
+截图：
+![网页6](arch.assets/网页6.png)
 
 
 
