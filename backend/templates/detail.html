@@ -13,22 +13,30 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <div id="mask">
         <div class="center">
+            {% verbatim %}
             <h2 class="title"> {{title}} </h2>
+            {% endverbatim %}
             <!-- 图片 -->
             <img :src="imgSrc" :style="img_style" alt="" />
             
             <div class="meaasge">
                 <div class="detail">
+                    {% verbatim %}
                     <div>作者: {{author}}</div>
                     <div>日期: {{date}}</div> 
                     <div id="tag">tag: {{tags}}</div>
+                    {% endverbatim %}
                 </div>
                 <div class="like">
                     <button id="delete" v-show="isShow"><img src="{% static 'css/imgs/delete.webp' %}" alt="" @click="delete_pic"></button>
                     <button id="thumb"><img src="{% static 'css/imgs/thumb.webp' %}" alt="" @click="give_a_thumb"></button>
+                    {% verbatim %}
                     {{num_like}}
+                    {% endverbatim %}
                     <button id="star"><img src="{% static 'css/imgs/star.webp' %}" alt="" @click="star_it"></button>
+                    {% verbatim %}
                     {{num_star}}
+                    {% endverbatim %}
                 </div>
             </div>
             
