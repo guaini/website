@@ -4,7 +4,7 @@
 
 该网站的整体架构为MVC架构，即由模型，视图和控制器三部分组成。架构大致如下：
 
-![arch](.\arch.png)
+![arch](./arch.png)
 
 ### 1. 视图
 
@@ -33,7 +33,7 @@
 
  截图：
 
-![网页1](arch.assets\网页1.png)  
+![网页1](arch.assets/网页1.png)  
 
 
 
@@ -41,7 +41,7 @@
 
  截图：
 
-![网页2](arch.assets\网页2.png)
+![网页2](arch.assets/网页2.png)
 
  
 
@@ -49,7 +49,7 @@
 
 截图：
 
-![网页3](arch.assets\网页3.png)
+![网页3](arch.assets/网页3.png)
 
 
 
@@ -57,7 +57,7 @@
 
 截图：
 
-![网页4](arch.assets\网页4.png)
+![网页4](arch.assets/网页4.png)
 
 
 
@@ -65,13 +65,15 @@
 
 截图：
 
-![网页5](arch.assets\网页5.png)
+![网页5](arch.assets/网页5.png)
 
 
 
 【网页6】
 
-截图： ![网页6](arch.assets\网页6.png)
+截图：
+
+![网页6](arch.assets/网页6.png)
 
 
 
@@ -79,7 +81,7 @@
 
 截图：
 
-![网页7](arch.assets\网页7.png)
+![网页7](arch.assets/网页7.png)
 
 
 
